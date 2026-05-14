@@ -1,0 +1,5 @@
+git rm --cached peer tracker file1 downloaded_file1
+git add .gitignore
+git commit -m "Removed unnecessary files and added gitignore"
+git push
+
