@@ -1,85 +1,257 @@
-## BitTorrent-like P2P File Sharing System (C++)
+# P2P File Sharing System
 
-A multi-peer, chunk-based file sharing system implemented in C++ using socket programming and multithreading.
-This project simulates core features of BitTorrent, including parallel downloads, peer discovery, and real-time progress tracking.
+A multi-peer torrent-style file sharing system built using C++, TCP sockets, and multithreading.
 
-## Features
-> Tracker-based peer discovery
-> Chunk-based file transfer
-> Parallel downloads using multithreading
-> Multi-peer load distribution
-> Real-time progress bar with speed & ETA
-> Retry mechanism for failed chunks
-> Thread-safe file writing using mutex
-> Colored terminal UI
+This project supports:
+
+- Chunk-based downloading
+- Parallel downloads using threads
+- Tracker-based peer discovery
+- Automatic dead-peer cleanup
+- Heartbeat/PING mechanism
+- Same-laptop and multi-laptop support
+- Colorful command-line UI
 
 
-## System Architecture
-> Tracker maintains file to peer mapping
-> Peers act as both client & server
-> Files are split into chunks and downloaded in parallel
+# Features
 
-## Requirements
-> Linux/Ubuntu/WSL
-> g++ compiler
-> POSIX sockets
+## Multi-Peer Downloading
 
-## Compilation
-g++ tracker.cpp -o tracker
-g++ peer.cpp -o peer -pthread
+Files are divided into chunks and downloaded simultaneously from multiple peers.
 
-## File Setup
+## Tracker-Based Architecture
 
-Make sure the file exists in the project directory:
+A central tracker server maintains:
+- file-to-peer mappings
+- active peers
+- peer availability
+
+## Automatic Dead-Peer Cleanup
+
+Peers periodically send heartbeat messages.
+
+Inactive peers are automatically removed from the tracker.
+
+## Parallel Chunk Downloads
+
+Each chunk is downloaded in a separate thread.
+
+Maximum 5 parallel threads are used at once.
+
+## Same-Laptop + Multi-Laptop Support
+
+Supports:
+- localhost testing (`127.0.0.1`)
+- LAN/WiFi-based peer sharing
+  
+
+# Technologies Used
+- C++
+- POSIX TCP Sockets
+- Multithreading (`std::thread`)
+- Linux Networking
+- File I/O
+
+## How To Run
+
+### 1. Compile Tracker
 
 ```bash
-cd ~/p2p
-dd if=/dev/urandom of=file1 bs=1K count=20
+g++ tracker.cpp -pthread -o tracker
 ```
 
-## How to Run
-1. Start Tracker
+---
+
+### 2. Run Tracker
 
 ```bash
 ./tracker
 ```
 
-2. Start Peers(in separate terminals)
+Leave tracker terminal running.
+
+---
+
+### 3. Compile Peer
+
+```bash
+g++ peer.cpp -pthread -o peer
+```
+
+---
+
+### 4. Run Peer
 
 ```bash
 ./peer
-Enter port: 9001
-> register file1
 ```
+
+Peer will ask:
+
+```txt
+Enter port:
+Enter TRACKER IP:
+Enter YOUR laptop IP:
+```
+
+---
+
+## SAME LAPTOP TESTING
+
+### Peer 1
+
+Enter:
+
+```txt
+Port: 5000
+TRACKER IP: 127.0.0.1
+YOUR laptop IP: 127.0.0.1
+```
+
+Create test file:
+
+```bash
+echo "Hello World" > notes.txt
+```
+
+Register file:
+
+```txt
+register notes.txt
+```
+
+---
+
+### Peer 2
+
+Run another peer:
 
 ```bash
 ./peer
-Enter port: 9002
-> register file1
 ```
 
-3. Download File
+Enter:
+
+```txt
+Port: 6000
+TRACKER IP: 127.0.0.1
+YOUR laptop IP: 127.0.0.1
+```
+
+Download file:
+
+```txt
+download notes.txt
+```
+
+Downloaded file:
+
+```txt
+downloaded_notes.txt
+```
+
+---
+
+## MULTI-LAPTOP TESTING
+
+Connect all laptops to same WiFi/LAN.
+
+---
+
+### Find Tracker Laptop IP
+
+Run on tracker laptop:
+
+```bash
+hostname -I
+```
+
+Example:
+
+```txt
+192.168.1.5
+```
+
+---
+
+### Tracker Laptop
+
+Run:
+
+```bash
+./tracker
+```
+
+---
+
+### Peer Laptop A
+
+Run:
 
 ```bash
 ./peer
-Enter port: 9003
-> download file1
 ```
 
-## Key Concepts Used
-> Socket Programming (TCP)
-> Multithreading (std::thread)
-> Synchronization (mutex)
-> File I/O (binary mode)
-> Load balancing
-> Basic distributed systems design
+Example:
 
+```txt
+Port: 5000
+TRACKER IP: 192.168.1.5
+YOUR laptop IP: 192.168.1.9
+```
 
-## Author
+Create test file:
 
-Amarpreet Samra
+```bash
+echo "Network Test File" > movie.txt
+```
 
+Register file:
 
-## Conclusion
-This project demonstrates core distributed system concepts and is suitable for networking.
+```txt
+register movie.txt
+```
 
+---
+
+### Peer Laptop B
+
+Run:
+
+```bash
+./peer
+```
+
+Example:
+
+```txt
+Port: 6000
+TRACKER IP: 192.168.1.5
+YOUR laptop IP: 192.168.1.12
+```
+
+Download file:
+
+```txt
+download movie.txt
+```
+
+---
+
+## Useful Commands
+
+```txt
+register <file>
+download <file>
+unregister <file>
+delete <file>
+trackerlist
+list
+exit
+```
+
+## Project Structure
+
+```txt
+tracker.cpp   -> Tracker server
+peer.cpp      -> Peer client + file server
